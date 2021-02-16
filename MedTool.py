@@ -165,6 +165,9 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         
+        self.onlyInt = QtGui.QIntValidator()
+        self.lineDemand1.setValidator(self.onlyInt)
+        self.lineOffer1.setValidator(self.onlyInt)
         self.retranslateUi(MainWindow)
         self.pushButtonSave.clicked.connect(self.mediation_info)
         self.pushButtonForm.clicked.connect(self.listWidget.clear)
