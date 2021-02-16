@@ -4,7 +4,7 @@
 # In[1]:
 
 
-import datetime, os, sys, re,openpyxl, PyQt5, time
+import datetime, os, sys, re, PyQt5, openpyxl 
 import pandas as pd
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QApplication
