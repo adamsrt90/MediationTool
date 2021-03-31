@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[ ]:
 
 
 import datetime,  sys,PyQt5, openpyxl, itertools
@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QApplication
 
 
-# In[2]:
+# In[ ]:
 
 
 starttime = str(datetime.datetime.now())
@@ -23,16 +23,21 @@ offers = []
 offertime = []
 demandtime = []
 mediationinfo = []
+bracketHigh = []
+bracketLow = []
+midPoints = []
+memoList=[]
 a = []
 data = {"Demands": demands,
         "Demand_Time": demandtime,
         "Offers": offers,
-        "Offer_Time": offertime}
+        "Offer_Time": offertime,
+        "Mid_Point": midPoints}
 
 counter = 0
 
 
-# In[3]:
+# In[ ]:
 
 
 class Ui_MainWindow(object):
@@ -115,7 +120,7 @@ class Ui_MainWindow(object):
         self.label.setFont(font)
         self.label.setAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop)
         self.label.setObjectName("label")
-        self.verticalLayout.addWidget(self.label)
+        self.verticalLayout.addWidget(self.label, 0, QtCore.Qt.AlignHCenter|QtCore.Qt.AlignVCenter)
         self.lineDemand1 = QtWidgets.QLineEdit(self.centralwidget)
         self.lineDemand1.setObjectName("lineDemand1")
         self.verticalLayout.addWidget(self.lineDemand1)
@@ -133,7 +138,7 @@ class Ui_MainWindow(object):
         self.label_2.setFont(font)
         self.label_2.setAlignment(QtCore.Qt.AlignCenter)
         self.label_2.setObjectName("label_2")
-        self.verticalLayout_2.addWidget(self.label_2)
+        self.verticalLayout_2.addWidget(self.label_2, 0, QtCore.Qt.AlignHCenter|QtCore.Qt.AlignVCenter)
         self.lineOffer1 = QtWidgets.QLineEdit(self.centralwidget)
         self.lineOffer1.setObjectName("lineOffer1")
         self.verticalLayout_2.addWidget(self.lineOffer1)
@@ -142,6 +147,14 @@ class Ui_MainWindow(object):
         self.verticalLayout_2.addWidget(self.pushButtonOffer1)
         self.horizontalLayout_2.addLayout(self.verticalLayout_2)
         self.verticalLayout_4.addLayout(self.horizontalLayout_2)
+        self.pushButtonBracket = QtWidgets.QPushButton(self.centralwidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.pushButtonBracket.sizePolicy().hasHeightForWidth())
+        self.pushButtonBracket.setSizePolicy(sizePolicy)
+        self.pushButtonBracket.setObjectName("pushButtonBracket")
+        self.verticalLayout_4.addWidget(self.pushButtonBracket, 0, QtCore.Qt.AlignHCenter)
         spacerItem4 = QtWidgets.QSpacerItem(40, 50, QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Minimum)
         self.verticalLayout_4.addItem(spacerItem4)
         self.tableWidget = QtWidgets.QTableWidget(self.centralwidget)
@@ -181,6 +194,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_4.addLayout(self.horizontalLayout_5)
         self.gridLayout.addLayout(self.verticalLayout_4, 0, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
+        self.actionHow_to_Use = QtWidgets.QAction(MainWindow)
 
 
         self.retranslateUi(MainWindow)
@@ -201,12 +215,12 @@ class Ui_MainWindow(object):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         self.buttonBox.rejected.connect(self.clear_data)
         self.buttonBox.rejected.connect(self.tableWidget.clearContents)
-#         self.buttonBox.accepted.connect(self.even_data)
         self.buttonBox.accepted.connect(self.final_offers)
         self.pushButtonDemand1.clicked.connect(self.demand_update)
         self.pushButtonOffer1.clicked.connect(self.offer_update)
         self.pushButtonOffer1.clicked.connect(self.mid_point)
         self.pushButtonOffer1.clicked.connect(self.round_counter)
+        self.pushButtonBracket.clicked.connect(self.set_bracket)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
       
 
@@ -235,7 +249,7 @@ class Ui_MainWindow(object):
         try:
             demtime = str(datetime.datetime.now())
             dem = int(self.lineDemand1.text())
-            print(f'This is the current demand and time {dem} {demtime.split()[1]}')
+            print(f'The current demand is {dem} at {demtime.split()[1]}')
             demands.append(dem)
             demandtime.append(demtime.split()[1])
             rowPosition = self.tableWidget.rowCount()
@@ -255,8 +269,9 @@ class Ui_MainWindow(object):
         try:
             offtime = str(datetime.datetime.now())
             off = int(self.lineOffer1.text())
-            print(f'This is the current offer and time {off} {offtime.split()[1]}')
+            print(f'The current offer is {off} at {offtime.split()[1]}')
             offers.append(off)
+            memoList.append(tuple(["Demand and offer",demands[-1], off]))
             offertime.append(offtime.split()[1])
             rowPosition = self.tableWidget.rowCount()
             self.tableWidget.insertRow(rowPosition)
@@ -265,7 +280,30 @@ class Ui_MainWindow(object):
             self.tableWidget.setItem(rowPosition,2, QtWidgets.QTableWidgetItem(offtime.split()[1]))
         except ValueError:
             print("Please input an offer!")
-        
+    
+    def set_bracket(self):
+        '''
+        updates the bracket global lists
+        outputs them to the table and lists it as bracket
+        '''
+        try:
+            
+            bracketTime = str(datetime.datetime.now())
+            bracket1 = int(self.lineDemand1.text())
+            bracket2 = int(self.lineOffer1.text())
+            memoList.append(tuple(["Bracket", bracket1, bracket2]))
+            midPoint = (bracket1 + bracket2)/2
+            print(f'The current bracket is {bracket1} / {bracket2} at {bracketTime.split()[1]}')
+            bracketHigh.append(bracket1)
+            bracketLow.append(bracket2)
+            rowPosition = self.tableWidget.rowCount()
+            self.tableWidget.insertRow(rowPosition)
+            self.tableWidget.setItem(rowPosition,0, QtWidgets.QTableWidgetItem('Bracket'))
+            self.tableWidget.setItem(rowPosition,1, QtWidgets.QTableWidgetItem(f'${bracket1} / ${bracket2}'))
+            self.tableWidget.setItem(rowPosition,2, QtWidgets.QTableWidgetItem(bracketTime.split()[1]))
+            self.tableWidget.setItem(rowPosition,3, QtWidgets.QTableWidgetItem(f'${midPoint}'))
+        except ValueError:
+            print("Please input a High Bracket and a Low Bracket")
     
     def mid_point(self):
         '''Will calculate the mid point between the latest demand and
@@ -273,6 +311,7 @@ class Ui_MainWindow(object):
         midTime = str(datetime.datetime.now())
         try:
             midPoint = (offers[-1] + demands[-1])/2
+            midPoints.append(midPoint)
             rowPosition = self.tableWidget.rowCount()
             self.tableWidget.insertRow(rowPosition)
             self.tableWidget.setItem(rowPosition,0, QtWidgets.QTableWidgetItem('MidPoint'))
@@ -312,32 +351,34 @@ class Ui_MainWindow(object):
             print("Please input the case number, mediator, or Plaintiff's Attorney")
         else:
             try:
-                medsummary = f'On {datetoday} we had the mediation with {self.mEDIATORLineEdit.text()} and {self.pLAINTIFFSATTORNEYLineEdit.text()}. During the deposition, we made {len(demands)} moves. The initial demand was ${demands[0]} and ended with ${demands[-1]}. The initial offer was ${offers[0]} and the final offer was ${offers[-1]}. The demands and offers made are as follows: '
+                medsummary = f'On {datetoday} we had the mediation with {self.mEDIATORLineEdit.text()} and {self.pLAINTIFFSATTORNEYLineEdit.text()}. During the mediation, we made {len(memoList)} moves. The initial demand was ${demands[0]} and ended with ${demands[-1]}. The initial offer was ${offers[0]} and the final offer was ${offers[-1]}. Any demands, offers, or brackets are as follows: '
                 document.add_paragraph(medsummary)
-                for (a) in zip(demands, offers):
+                for a in memoList:
                     document.add_paragraph(f'{a}', style='List Number')
-                if self.checkBox.isChecked == True:
+                if self.checkBox.isChecked() == True:
                     document.add_paragraph('Mediation was successful. As such, we will draft closing documents and prepare to close the file.')
                 else:
                     document.add_paragraph("Mediation was unsuccessful. As such, we should work to investigate the case further and plan the next course of action.")
                 document.add_paragraph(self.textBrowserNotes.toPlainText())
                 document.save(f'{case}_Mediation_Memo.docx')
-                a = list(map(list,itertools.zip_longest(data['Demands'], data['Demand_Time'],data['Offers'], data['Offer_Time'])))
+                a = list(map(list,itertools.zip_longest(data['Demands'], data['Demand_Time'],data['Offers'], data['Offer_Time'], data['Mid_Point'])))
                 df1 = pd.DataFrame()
-                df1[['Demands','Demand_Time','Offers', "Offer_Time"]] = pd.DataFrame(a)
+                df1[['Demands','Demand_Time','Offers', "Offer_Time", "Mid_Points"]] = pd.DataFrame(a)
                 df1[['Start_Time']] = starttime
                 df1[['End_Time']] = str(datetime.datetime.now())
                 df1.to_excel(case +".xlsx", sheet_name = sheet_info)
                 sys.exit(app.exec_())
             except IndexError:
                 print("Please input at least one demand and one offer")
+            except OSError:
+                print('Please make sure the case name does not include the following: ?, ", *, :')
                 pass
                 
 
     
     def clear_data(self):
         '''sets the list variables to global and allows them to be cleared if mistakes were input'''
-        global demands, offers, offertime, demandtime, data,df1, counter, mediationinfo
+        global demands, offers, offertime, demandtime, data,df1, counter, mediationinfo, bracketHigh, bracketLow, midPoints,memoList
         self.tableWidget.clearContents()
         self.tableWidget.setRowCount(0)
         demands = []
@@ -345,6 +386,10 @@ class Ui_MainWindow(object):
         offertime = []
         demandtime = []
         mediationinfo = []
+        bracketHigh = []
+        bracketLow = []
+        midPoints = []
+        memoList=[]
         data = {"Demands": demands,
                 "Demand_Time": demandtime,
                "Offers": offers,
@@ -361,10 +406,11 @@ class Ui_MainWindow(object):
         self.pLAINTIFFSATTORNEYLabel.setText(_translate("MainWindow", "PLAINTIFF\'S ATTORNEY"))
         self.pushButtonForm.setText(_translate("MainWindow", "Clear Form"))
         self.pushButtonSave.setText(_translate("MainWindow", "Save Information"))
-        self.label.setText(_translate("MainWindow", "DEMAND"))
+        self.label.setText(_translate("MainWindow", "DEMAND/BRACKET HIGH"))
         self.pushButtonDemand1.setText(_translate("MainWindow", "Set Demand"))
-        self.label_2.setText(_translate("MainWindow", "OFFER"))
+        self.label_2.setText(_translate("MainWindow", "OFFER/BRACKET LOW"))
         self.pushButtonOffer1.setText(_translate("MainWindow", "Set Offer"))
+        self.pushButtonBracket.setText(_translate("MainWindow", "Set Bracket"))
         self.label_3.setText(_translate("MainWindow", "Mediation Notes"))
         self.textBrowserNotes.setPlaceholderText(_translate("MainWindow", "Enter any mediation notes here(new medicals, information from counsel, any follow up for unsucessful mediations, etc...)"))
         self.checkBox.setText(_translate("MainWindow", "Mediation Successful?"))
